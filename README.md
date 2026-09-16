@@ -69,6 +69,14 @@ A sophisticated enterprise network topology implementing multi-VLAN design, inte
 - All devices can query for accurate time
 - Critical for log correlation and security events
 
+### 8. **HSRP (Hot Standby Router Protocol)**
+- Router redundancy across both clusters
+- Active/standby router configuration for gateway failover
+- Virtual IP (VIP) shared between physical routers
+- Automatic failover when active router goes down
+- Each VLAN has a designated HSRP group for high availability
+- PCs use virtual IP as default gateway, not physical router IP
+
 ## Lab Objectives
 
 ✓ Implement 6 departmental VLANs with proper IP subnetting  
@@ -78,8 +86,10 @@ A sophisticated enterprise network topology implementing multi-VLAN design, inte
 ✓ Create DHCP pools for each VLAN  
 ✓ Implement ACLs to restrict server access by department  
 ✓ Configure DNS, HTTP, and NTP services  
+✓ Deploy HSRP for router redundancy and gateway failover  
 ✓ Verify cross-VLAN and cross-cluster communication  
 ✓ Test ACL enforcement and access denial  
+✓ Test HSRP failover scenarios  
 
 ## Configuration Highlights
 
@@ -139,6 +149,22 @@ Switch(config-if)# switchport mode access
 Switch(config-if)# switchport access vlan 10
 ```
 
+### HSRP Configuration Example
+```
+Router0(config)# interface Fa0/0.10
+Router0(config-subif)# standby 10 ip 10.10.10.254
+Router0(config-subif)# standby 10 priority 110
+Router0(config-subif)# standby 10 preempt
+
+Router1(config)# interface Fa0/0.10
+Router1(config-subif)# standby 10 ip 10.10.10.254
+Router1(config-subif)# standby 10 priority 100
+Router1(config-subif)# standby 10 preempt
+
+! PC default gateway points to virtual IP: 10.10.10.254
+! If Router0 fails, Router1 becomes active automatically
+```
+
 ## Verification Steps
 
 1. **Check VLAN membership** — `show vlan brief` on all switches
@@ -151,6 +177,9 @@ Switch(config-if)# switchport access vlan 10
 8. **Verify ACL enforcement** — Attempt denied ping (should fail gracefully)
 9. **Test DNS resolution** — `nslookup` from each VLAN
 10. **Check NTP sync** — `show clock` on devices with NTP enabled
+11. **Verify HSRP status** — `show standby brief` on both routers
+12. **Test HSRP failover** — Disable active router and verify standby takes over
+13. **Confirm PC gateway** — Verify PCs use virtual IP (10.x.x.254) not physical router IP
 
 ## Files Included
 
@@ -167,9 +196,11 @@ Switch(config-if)# switchport access vlan 10
 - **OSPF Routing:** Multi-router dynamic routing with VLAN-aware design
 - **DHCP Configuration:** Multi-pool DHCP for departmental subnets
 - **Access Control Lists:** Granular security policies and access denial
+- **HSRP (Hot Standby Router Protocol):** Router redundancy with automatic failover
 - **Network Services:** NTP, DNS, and HTTP centralized deployment
-- **Troubleshooting:** Complex multi-VLAN connectivity and ACL testing
-- **Enterprise Network Design:** Practical departmental isolation with services
+- **High Availability:** Gateway failover and service continuity
+- **Troubleshooting:** Complex multi-VLAN connectivity, ACL testing, and failover scenarios
+- **Enterprise Network Design:** Practical departmental isolation with redundancy and services
 - **Cisco IOS CLI:** Advanced router and switch commands
 
 ## Architecture Diagram
@@ -233,10 +264,12 @@ Switch(config-if)# switchport access vlan 10
 - **802.1Q Tagging:** Enables multiple VLANs over single physical links
 - **Router-on-a-Stick Scalability:** One router can serve many VLANs via subinterfaces
 - **OSPF in Multi-VLAN Networks:** Dynamic routing works seamlessly across departments
+- **HSRP for High Availability:** Single virtual gateway IP masks dual routers; automatic failover without client reconfiguration
 - **ACLs for Security:** Granular access control without physical separation
 - **Centralized Services:** NTP, DNS, HTTP reach all departments across VLAN boundaries
 - **DHCP at Scale:** Multiple pools reduce manual IP assignment overhead
-- **Troubleshooting Multi-VLAN:** Test methodology (check VLAN membership → trunking → routing → ACLs)
+- **Redundancy Design:** Eliminates single points of failure at gateway layer
+- **Troubleshooting Multi-VLAN:** Test methodology (check VLAN membership → trunking → routing → ACLs → HSRP status)
 
 ## Advanced Concepts Tested
 
@@ -248,7 +281,6 @@ Switch(config-if)# switchport access vlan 10
 
 ## Future Enhancements
 
-- Add HSRP for router redundancy (gateway failover)
 - Implement EIGRP as alternative to OSPF
 - Add ACL logging to monitor access attempts
 - Integrate Wireless Access Points (WAP) with VLAN assignment
@@ -256,6 +288,8 @@ Switch(config-if)# switchport access vlan 10
 - Add site-to-site VPN between clusters
 - Implement VLAN access control lists (VACLs) at switch layer
 - Deploy RADIUS or TACACS+ for centralized authentication
+- Add switch redundancy with Spanning Tree Protocol (STP) optimization
+- Implement HSRP tracking for priority-based failover based on link status
 
 ## Author Notes
 
@@ -264,11 +298,12 @@ This lab demonstrates advanced network design solving real organizational requir
 - **HR Department:** Restricted access to sensitive servers (VLAN 20 with ACL)
 - **Executive Suite:** Separated on VLAN 30 with elevated access
 - **Marketing & Sales:** Dedicated VLANs (35, 40) for departmental operations
+- **High Availability:** HSRP ensures no single router failure impacts network accessibility
 
-The implementation shows how enterprise networks balance connectivity with security through VLAN segmentation and policy-based access control.
+The implementation shows how enterprise networks balance connectivity, security, and reliability through VLAN segmentation, policy-based access control, and redundant gateway architecture. The HSRP implementation demonstrates production-ready network design where gateway failover is transparent to end users.
 
 ---
 
 **Internship Period:** [Your dates]  
-**Skills:** VLAN Design, 802.1Q Trunking, Inter-VLAN Routing, OSPF, DHCP, ACLs, NTP/DNS/HTTP, Router-on-a-Stick, Network Security  
-**Certification Track:** Cisco CCNA (Network Design & Operations)
+**Skills:** VLAN Design, 802.1Q Trunking, Inter-VLAN Routing, OSPF, DHCP, ACLs, HSRP, NTP/DNS/HTTP, Router-on-a-Stick, Gateway Redundancy, Network Security  
+**Certification Track:** Cisco CCNA (Network Design, Operations & High Availability)
